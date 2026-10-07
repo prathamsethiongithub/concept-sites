@@ -389,6 +389,12 @@ function routeNow(){
 }
 function render(){
   var route = routeNow();
+  var anchor = null;
+  if(!VIEWS[route] && route.length > 1){
+    var aid = route.slice(1);
+    if(aid === 'enqForm'){ route = '/contact'; anchor = aid; }
+    else if(aid === 'finder' || aid === 'findTitle'){ route = '/'; anchor = aid; }
+  }
   var view = VIEWS[route];
   killStrands(); killQr();
   if(pageCtx){ try{ pageCtx.revert(); }catch(e){} pageCtx = null; }
@@ -401,6 +407,12 @@ function render(){
   currentRoute = route;
   bindPageBits(route);
   try{ PAGE.focus({preventScroll:true}); }catch(e){}
+  if(anchor){
+    setTimeout(function(){
+      var el = document.getElementById(anchor);
+      if(el) try{ el.scrollIntoView({behavior:'auto', block:'start'}); }catch(e){}
+    }, 90);
+  }
   requestAnimationFrame(function(){ try{ if(window.ScrollTrigger) ScrollTrigger.refresh(); }catch(e){} });
 }
 function animateCurrent(){
@@ -654,9 +666,9 @@ function initQr(){
     qr.raf = requestAnimationFrame(frame);
     if(!visible || document.hidden) return;
     t += .016;
-    if(Math.abs(progT - prog) > .001){ prog += (progT - prog) * .07; }
+    if(Math.abs(progT - prog) > .001){ prog += (progT - prog) * .1; }
     else { prog = progT; }
-    if(progT === 1 && !settled && prog > .99){ settled = true; panel.classList.add('is-on'); }
+    if(progT === 1 && !settled && prog > .985){ settled = true; panel.classList.add('is-on'); }
     if(progT === 0 && settled && prog < .02){ settled = false; panel.classList.remove('is-on'); }
     c2.clearRect(0,0,W,W);
     var e = ease(Math.max(0, Math.min(1, prog)));
@@ -710,7 +722,7 @@ function initQr(){
     io = new IntersectionObserver(function(en){
       visible = en[0].isIntersecting;
       if(visible && !started){ startGather(); }
-    },{threshold:.35});
+    },{threshold:.05});
     io.observe(panel);
   }catch(e){ visible = true; startGather(); }
   qr.raf = requestAnimationFrame(frame);
