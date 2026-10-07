@@ -1465,13 +1465,19 @@ function initQr(){
   var onResize = function(){ size(); };
   window.addEventListener('resize', onResize);
   var io = null;
+  function startGather(){
+    started = true;
+    var sm = false; try{ sm = window.matchMedia('(max-width:760px)').matches || window.innerWidth <= 760; }catch(e){}
+    if(sm){ settled = true; panel.classList.add('is-on'); if(tog) tog.style.display = 'none'; return; }
+    progT = 1; setTogLabel();
+  }
   try{
     io = new IntersectionObserver(function(en){
       visible = en[0].isIntersecting;
-      if(visible && !started){ started = true; progT = 1; setTogLabel(); }
+      if(visible && !started){ startGather(); }
     },{threshold:.35});
     io.observe(panel);
-  }catch(e){ visible = true; started = true; progT = 1; setTogLabel(); }
+  }catch(e){ visible = true; startGather(); }
   qr.raf = requestAnimationFrame(frame);
   qr.cleanup = function(){
     window.removeEventListener('resize', onResize);
