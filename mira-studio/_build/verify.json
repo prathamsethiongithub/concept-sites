@@ -1,0 +1,43 @@
+{
+ "raf": [
+  1,
+  1,
+  true
+ ],
+ "pre": false,
+ "wordFinal": "none",
+ "tween": [
+  0,
+  false
+ ],
+ "barTop": 0,
+ "docH": 6116,
+ "overflow": {
+  "sw": 1254,
+  "iw": 1264
+ },
+ "settleerr": "Runtime.evaluate timed out; expression: try{ ScrollTrigger.update(); gsap.global",
+ "shot_01-hero": 601813,
+ "shoterr_02-services_1": "Page.captureScreenshot timed out after 5s waiting for the daemon",
+ "shot_02-services": 325160,
+ "shoterr_03-band_1": "Page.captureScreenshot timed out after 5s waiting for the daemon",
+ "shot_03-band": 581320,
+ "shoterr_04-gallery_1": "Page.captureScreenshot timed out after 5s waiting for the daemon",
+ "shot_04-gallery": 1054560,
+ "servicesPage": true,
+ "shoterr_06-route-services_1": "Page.captureScreenshot timed out after 5s waiting for the daemon",
+ "shot_06-route-services": 279843,
+ "contactForm": true,
+ "slip": "Enquiry previewDemo \u00b7 not sentServiceCut & shape \u00b7 60 min \u00b7 \u20b91,800 samplePreferred day10 October 2026NameAaravPrepared in this browser only \u2014 nothing was stored",
+ "shoterr_07-contact-slip_1": "Page.captureScreenshot timed out after 5s waiting for the daemon",
+ "shot_07-contact-slip": 314895,
+ "lightboxOpen": true,
+ "shot_08-lightbox": 601760,
+ "shoterr_09-mobile-hero_1": "Page.captureScreenshot timed out after 5s waiting for the daemon",
+ "shot_09-mobile-hero": 619286,
+ "overflow390": {
+  "sw": 390,
+  "iw": 390
+ },
+ "shot_10-mobile-drawer": 471649
+}

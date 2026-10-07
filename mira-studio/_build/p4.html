@@ -1,0 +1,817 @@
+<script>
+/* ============================================================
+   MIRA STUDIO — application (vanilla JS)
+   Router · GSAP/Lenis motion system · strand canvas · demo logic
+   Everything degrades to a static, readable site without libs.
+   ============================================================ */
+(function(){
+"use strict";
+
+var root = document.documentElement;
+var RM = false; try { RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
+var CAN = false;              /* can animate (libs + !RM) */
+var PAGE = document.getElementById('page');
+var progressEl = document.getElementById('progress');
+var header = document.getElementById('siteHeader');
+var mCta = document.getElementById('mCta');
+var pageCtx = null;
+var currentRoute = null;
+var selectedService = 'cut-shape';
+
+function $(s,c){ return (c||document).querySelector(s); }
+function $$(s,c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); }
+function esc(v){ return String(v).replace(/[&<>"']/g,function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
+function money(n){ return '\u20B9'+Number(n).toLocaleString('en-IN'); }
+function imgSrc(k){ var i=$('#asset-store img[data-k="'+k+'"]'); return i?i.src:''; }
+function hydrate(scope){ $$('img[data-k]',scope).forEach(function(im){ im.src=imgSrc(im.getAttribute('data-k')); }); }
+
+/* ---------- data (all sample) ---------- */
+var DATA = {
+  services: [
+    { id:'cut-shape', num:'01', cat:'Hair', name:'Cut & shape', dur:60, price:1800, desc:'A considered cut shaped around your texture, your routine, and the way you like to wear it.' },
+    { id:'wash-finish', num:'02', cat:'Hair', name:'Wash & finish', dur:45, price:1200, desc:'A soft cleanse, conditioning care, and a finish that still feels like you.' },
+    { id:'gloss-tone', num:'03', cat:'Colour', name:'Gloss & tone', dur:90, price:3200, desc:'A light-catching refresh that brings dimension and ease back to your colour.' },
+    { id:'colour-session', num:'04', cat:'Colour', name:'Colour session', dur:150, price:5800, desc:'A thorough consultation and a made-for-you tonal refresh, start to settle-in.' },
+    { id:'scalp-reset', num:'05', cat:'Care', name:'Scalp reset', dur:50, price:1600, desc:'A quiet scalp ritual — gentle cleanse, unhurried massage, restorative care.' },
+    { id:'deep-care', num:'06', cat:'Care', name:'Deep conditioning', dur:75, price:2400, desc:'A deeply nourishing treatment for softer, more touchable lengths.' }
+  ],
+  gallery: {
+    g1: { title:'Study in gold', cat:'Colour study', alt:'Concept imagery: close-up of warm golden curls against a pale studio background.' },
+    g2: { title:'Precision, mid-cut', cat:'Craft', alt:'Concept imagery: a section of wet hair held taut beside open cutting shears.' },
+    g3: { title:'Honest hands', cat:'Care ritual', alt:'Concept imagery: hands working a section of natural coily hair, close crop.' }
+  },
+  photos: ['g1','g2','g3'],
+  people: [
+    { initial:'I', name:'Ira Mehta', role:'Fictional stylist · Shape', bio:'Drawn to lived-in cuts, natural movement, and the small details that make a style feel personal.' },
+    { initial:'N', name:'Naina Rao', role:'Fictional stylist · Colour', bio:'Loves thoughtful tonal work, soft dimension, and colour that settles beautifully into daily life.' },
+    { initial:'S', name:'Sana Kapoor', role:'Fictional stylist · Care', bio:'Creates restorative rituals with a gentle touch and an unhurried, listening-first approach.' }
+  ],
+  hours: [
+    { d:'Monday', t:'Closed · sample' },
+    { d:'Tuesday–Friday', t:'10:00–19:00 · sample' },
+    { d:'Saturday', t:'9:00–17:00 · sample' },
+    { d:'Sunday', t:'By enquiry · sample' }
+  ],
+  steps: [
+    { num:'01', tag:'Choose', h:'Find your service', p:'Browse sample services with durations and starting prices — everything is illustrative.' },
+    { num:'02', tag:'Share', h:'Set a preference', p:'Try the local demo form: pick a service, a day, and a time window.' },
+    { num:'03', tag:'Confirm', h:'Availability, together', p:'A real studio would confirm your slot by message. This demo sends and stores nothing.' }
+  ],
+  faq: [
+    { q:'Are these real services and prices?', a:'No. Services, INR prices, durations, people and hours are illustrative sample data for a fictional portfolio concept. Nothing here is a real offer.' },
+    { q:'Does the form book an appointment?', a:'No. It validates locally and builds an in-page preview only. Nothing is saved or sent, and no slot is reserved — a real studio would confirm availability with you first.' },
+    { q:'Can I send a WhatsApp message from here?', a:'The button opens a preview of the proposed message. There is no WhatsApp number connected to this concept, and nothing leaves this page.' },
+    { q:'Are the stylists and imagery real?', a:'No. The team profiles are fictional, and every image is licensed stock photography used to illustrate the concept — not real staff, clients, or results.' }
+  ],
+  aboutValues: [
+    { h:'Start with you', p:'a good result begins with the routine, texture and feeling you describe.' },
+    { h:'Keep it considered', p:'small, thoughtful choices do more than a dramatic promise.' },
+    { h:'Leave room to breathe', p:'care should feel comfortable, warm and unhurried.' }
+  ]
+};
+
+/* ---------- templates ---------- */
+function svcCard(s){
+  return '<article class="svc" data-svc>'
+    + '<div class="svc-top"><span class="svc-num">'+s.num+'</span><span class="svc-cat">'+esc(s.cat)+'</span></div>'
+    + '<h3>'+esc(s.name)+'</h3>'
+    + '<p>'+esc(s.desc)+'</p>'
+    + '<div class="svc-meta">'
+    +   '<span><span class="k">Duration</span><span class="v">'+s.dur+' min</span></span>'
+    +   '<span class="svc-price"><span class="k">From · sample</span><span class="v">'+money(s.price)+'</span></span>'
+    + '</div>'
+    + '<button class="tlink" type="button" data-enquire="'+s.id+'">Enquire about this <span class="a" aria-hidden="true">↗</span></button>'
+    + '</article>';
+}
+function galCard(k){
+  var g = DATA.gallery[k];
+  return '<button class="gal-card" type="button" data-gal="'+k+'" aria-label="Open image: '+esc(g.title)+' — illustrative concept imagery">'
+    + '<span class="gal-inner"><img data-k="'+k+'" alt="'+esc(g.alt)+'" loading="lazy"></span>'
+    + '<span class="gal-ov"><strong>'+esc(g.title)+'</strong><small>'+esc(g.cat)+'</small></span>'
+    + '</button>';
+}
+function personCard(p){
+  return '<article class="person">'
+    + '<div class="mono" aria-hidden="true"><svg viewBox="0 0 62 62">'
+    +   '<circle class="ring2" cx="31" cy="31" r="23"></circle><circle class="ring" cx="31" cy="31" r="30"></circle>'
+    +   '<text x="31" y="38.5" text-anchor="middle">'+esc(p.initial)+'</text>'
+    + '</svg></div>'
+    + '<div><span class="p-role">'+esc(p.role)+'</span><h3>'+esc(p.name)+'</h3><p>'+esc(p.bio)+'</p>'
+    + '<span class="chip chip--plain">Fictional profile</span></div>'
+    + '</article>';
+}
+function stepsBlock(){
+  return '<div class="steps" data-reveal-group>'+DATA.steps.map(function(s){
+    return '<article class="step"><span class="idx">'+s.num+' / '+esc(s.tag)+'</span><h3>'+esc(s.h)+'</h3><p>'+esc(s.p)+'</p></article>';
+  }).join('')+'</div>';
+}
+function faqBlock(){
+  return '<div class="faq" id="faqList">'+DATA.faq.map(function(f){
+    return '<details><summary>'+esc(f.q)+'<span class="fq-mark" aria-hidden="true">+</span></summary><div class="fa"><p>'+esc(f.a)+'</p></div></details>';
+  }).join('')+'</div>';
+}
+function tickerBlock(){
+  var set = '<span class="mq-set"><b>Considered cuts</b><i>✳</i><u>Honest colour</u><i>✳</i><b>Room to breathe</b><i>✳</i><u>A little time for yourself</u><i>✳</i></span>';
+  return '<div class="ticker" aria-hidden="true"><div class="mq-track" data-mq>'+set+set+'</div></div>';
+}
+function endBand(){
+  return '<section class="end" aria-label="Closing note"><div class="wrap end-inner"><div>'
+    + '<p class="eyebrow">Whenever you’re ready</p>'
+    + '<h2 class="end-h2">A little care can change the <span class="it">shape</span> of a day.</h2>'
+    + '</div><a class="btn btn--light" href="#/contact" data-nav data-magnetic>Try the demo enquiry <span class="a" aria-hidden="true">↗</span></a></div></section>';
+}
+function galleryStrip(){
+  return '<div class="gal-strip">'+DATA.photos.map(function(k){ return galCard(k); }).join('')+'</div>';
+}
+
+function homePage(){
+  return ''
+  + '<section class="hero" id="hero">'
+  +   '<canvas id="strands" aria-hidden="true"></canvas>'
+  +   '<div class="wrap hero-grid">'
+  +     '<div class="hero-copy">'
+  +       '<p class="eyebrow" data-fade><span class="n">01</span> A slower kind of beauty studio</p>'
+  +       '<h1 class="hero-h1">'
+  +         '<span class="w" style="--i:0"><span class="wi">Hair<span class="punc">,</span></span></span> <span class="w" style="--i:1"><span class="wi">skin</span></span> <span class="w" style="--i:2"><span class="wi">&amp;</span></span><br>'
+         + '<span class="w" style="--i:3"><span class="wi">a</span></span> <span class="w" style="--i:4"><span class="wi">little</span></span> <span class="w" style="--i:5"><span class="wi">time</span></span><br>'
+         + '<span class="w" style="--i:6"><span class="wi">for</span></span> <span class="w" style="--i:7"><span class="wi it">yourself.</span></span>'
+  +       '</h1>'
+  +       '<p class="hero-lede" data-fade>A fictional editorial studio concept built around considered services, honest sample prices, and an unhurried kind of care.</p>'
+  +       '<div class="hero-actions" data-fade>'
+  +         '<a class="btn" href="#/contact" data-nav data-magnetic>Book an appointment <span class="a" aria-hidden="true">↗</span></a>'
+  +         '<a class="tlink" href="#/services" data-nav>Explore the menu <span class="a" aria-hidden="true">↗</span></a>'
+  +       '</div>'
+  +       '<p class="hero-smallprint" data-fade>Samples throughout — nothing here is a real business.</p>'
+  +     '</div>'
+  +     '<div class="hero-stage" id="heroStage">'
+  +       '<div class="hero-orbit o1" aria-hidden="true"></div>'
+  +       '<div class="hero-orbit o2" aria-hidden="true"><i></i></div>'
+  +       '<div class="hero-card-wrap" id="heroCardWrap">'
+  +         '<div class="hero-card"><img data-k="hero" alt="Concept imagery: portrait with hair pinned in a low chignon, warm light." width="1100" height="1375"></div>'
+  +         '<div class="hero-stamp" aria-hidden="true"><svg viewBox="0 0 120 120">'
+  +           '<defs><path id="circPath" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs>'
+  +           '<text><textPath href="#circPath">MIRA STUDIO · CONCEPT PIECE · A LITTLE TIME FOR YOURSELF · </textPath></text>'
+  +           '<text class="star" x="60" y="69" text-anchor="middle">✳</text>'
+  +         '</svg></div>'
+  +         '<div class="float-card fc-hours"><span class="dot"></span>Tue–Sun · 10:00–19:30&nbsp; <em>sample hours</em></div>'
+  +         '<div class="hero-caption">Concept imagery · illustrative only</div>'
+  +       '</div>'
+  +     '</div>'
+  +   '</div>'
+  +   '<div class="scroll-cue" aria-hidden="true">Take your time</div>'
+  + '</section>'
+  + tickerBlock()
+  + '<section class="section wrap" aria-labelledby="svcTitle"><div class="section-head">'
+  +   '<div class="left"><p class="eyebrow"><span class="n">01</span> The service edit</p><h2 class="h-sec" id="svcTitle">Care<span class="punc">,</span> <span class="it">with intention.</span></h2></div>'
+  +   '<div class="right"><p class="lede">A short edit of the sample menu — every service shows a duration and a starting price, so you can plan before you visit.</p>'
+  +   '<a class="tlink" href="#/services" data-nav>See the full menu <span class="a" aria-hidden="true">↗</span></a></div>'
+  + '</div>'
+  + '<div class="svc-grid" data-reveal-group>'+DATA.services.slice(0,3).map(svcCard).join('')+'</div>'
+  + '<p class="section-note">Sample INR prices and durations · illustrative concept menu only.</p></section>'
+  + '<section class="band" aria-labelledby="storyTitle"><div class="wrap story-grid">'
+  +   '<div class="story-art" data-reveal>'
+  +     '<div class="story-frame" id="storyFrame"><img data-k="story" alt="Concept imagery: wavy hair in warm evening light, close crop." loading="lazy" width="1000" height="1333"></div>'
+  +     '<div class="story-chip" id="storyChip">“What does your hair do on its own?” — the first question we’d ask.</div>'
+  +     '<p class="story-note">Sample consultation note · concept imagery</p>'
+  +   '</div>'
+  +   '<div class="story-copy" data-reveal>'
+  +     '<p class="eyebrow"><span class="n">02</span> Our way of looking</p>'
+  +     '<h2 class="h-sec" id="storyTitle">Beauty should feel like <span class="it">you.</span></h2>'
+  +     '<p>We imagine a studio where the consultation is as considered as the cut — a place to talk through what you want, what your hair actually does, and what fits your everyday.</p>'
+  +     '<p>Nothing rushed. Nothing overdone. Just thoughtful work, a comfortable chair, and a little room to exhale.</p>'
+  +     '<a class="tlink" href="#/about" data-nav>The studio story <span class="a" aria-hidden="true">↗</span></a>'
+  +   '</div>'
+  + '</div></section>'
+  + '<section class="section wrap" aria-labelledby="peopleTitle"><div class="section-head">'
+  +   '<div class="left"><p class="eyebrow"><span class="n">03</span> Meet the imagined team</p><h2 class="h-sec" id="peopleTitle">Good hands.<br>Good <span class="it">listening.</span></h2></div>'
+  +   '<div class="right"><p class="lede">Fictional introductions, kept for the concept. They do not represent real staff, credentials or experience.</p></div>'
+  + '</div><div class="people-grid" data-reveal-group>'+DATA.people.map(personCard).join('')+'</div></section>'
+  + '<section class="section section--tight wrap" aria-labelledby="stepsTitle"><div class="section-head">'
+  +   '<div class="left"><p class="eyebrow"><span class="n">04</span> A simple next step</p><h2 class="h-sec" id="stepsTitle">How the demo <span class="it">works.</span></h2></div>'
+  +   '<div class="right"><p class="lede">No appointment is booked here — a real studio would confirm availability with you first.</p></div>'
+  + '</div>'+stepsBlock()+'</section>'
+  + '<section class="section wrap" aria-labelledby="galTitle"><div class="section-head">'
+  +   '<div class="left"><p class="eyebrow"><span class="n">05</span> A visual note</p><h2 class="h-sec" id="galTitle">Texture tells <span class="it">a story.</span></h2></div>'
+  +   '<div class="right"><p class="lede">Licensed stock imagery, graded to the studio palette — not real clients, staff, or results.</p>'
+  +   '<a class="tlink" href="#/gallery" data-nav>View the gallery <span class="a" aria-hidden="true">↗</span></a></div>'
+  + '</div>'+galleryStrip()
+  + '<p class="section-note">Illustrative concept imagery only · no real clients or staff are shown.</p></section>'
+  + '<section class="section section--tight wrap" aria-labelledby="faqTitle"><div class="section-head">'
+  +   '<div class="left"><p class="eyebrow"><span class="n">06</span> A few useful things</p><h2 class="h-sec" id="faqTitle">Before you <span class="it">arrive.</span></h2></div>'
+  +   '<div class="right"><p class="lede">Sample-concept answers. This is not a real salon, and nothing here is an offer.</p></div>'
+  + '</div>'+faqBlock()+'</section>'
+  + endBand();
+}
+
+function servicesPage(){
+  var cats = ['All','Hair','Colour','Care'];
+  return ''
+  + '<section class="page-top wrap"><div class="page-heading">'
+  +   '<p class="eyebrow">The complete edit · sample menu</p>'
+  +   '<h1>Find your <span class="it">ritual.</span></h1>'
+  +   '<p class="lede">Filter by category, maximum duration, or sort by sample price. Every figure is fictional INR sample data — not a real offer.</p>'
+  + '</div></section>'
+  + '<section class="page-body wrap">'
+  + '<div class="filters">'
+  +   '<div class="fchips" id="fChips" role="group" aria-label="Filter by category">'+cats.map(function(c,i){
+        return '<button class="fchip" type="button" data-cat="'+c+'" aria-pressed="'+(i===0?'true':'false')+'">'+c+'</button>';
+      }).join('')+'</div>'
+  +   '<div class="frange"><label for="fDur">Maximum duration</label><input id="fDur" type="range" min="45" max="180" step="15" value="180"><span class="out" id="fDurOut" aria-live="polite">180 min</span></div>'
+  +   '<div class="fsort"><label for="fSort">Sort</label><select id="fSort"><option value="featured">Featured order</option><option value="price">Sample price — low to high</option><option value="dur">Shortest first</option></select></div>'
+  + '</div>'
+  + '<p class="fcount" id="fCount" aria-live="polite"></p>'
+  + '<div class="svc-grid" id="svcResults" data-reveal-group></div>'
+  + '<p class="section-note">All listed amounts and durations are sample data for this fictional portfolio concept. A real studio would confirm pricing and availability.</p>'
+  + '</section>';
+}
+
+function galleryPage(){
+  return ''
+  + '<section class="page-top wrap"><div class="page-heading">'
+  +   '<p class="eyebrow">Form, texture, feeling</p>'
+  +   '<h1>Gallery, <span class="it">imagined.</span></h1>'
+  +   '<p class="lede">A small study in shape, colour and care. Every image is licensed stock imagery, graded — not real clients, staff, or results.</p>'
+  + '</div></section>'
+  + '<section class="page-body wrap"><div class="gal-grid">'
+  +   galCard('g1') + galCard('g2')
+  +   '<div class="gal-note" data-reveal><p class="q">“Less than you think” is a valid answer to <span class="it">how much you need done.</span></p>'
+  +   '<div class="meta"><span>Sample note · concept content</span><i>✳</i></div></div>'
+  +   galCard('g3')
+  + '</div><p class="section-note">Fictional concept imagery. No real clients, staff, interiors or results are represented.</p></section>';
+}
+
+function aboutPage(){
+  return ''
+  + '<section class="page-top wrap"><div class="page-heading">'
+  +   '<p class="eyebrow">An idea for a studio</p>'
+  +   '<h1>Considered<span class="punc">,</span> <span class="it">from the start.</span></h1>'
+  +   '<p class="lede">Mira Studio is a fictional concept. This page describes an imagined approach — not an operating salon, offer, or team.</p>'
+  + '</div></section>'
+  + '<section class="page-body wrap"><div class="contact-grid" style="grid-template-columns:1.05fr .95fr">'
+  +   '<div>'
+  +     '<p style="font-family:var(--serif);font-size:1.5rem;line-height:1.45;letter-spacing:-.015em;max-width:560px">A chair, a mirror, an unrushed conversation — and a little more care in how the details come together.</p>'
+  +     '<p class="lede" style="margin-top:18px;max-width:560px">Mira was imagined as an editorial beauty space for people who want considered hair and skin without the noise. Not to change who you are — to make the everyday feel a touch more like your own.</p>'
+  +     '<p class="lede" style="margin-top:14px;max-width:560px">Everything here is sample content: the story, services, people, prices and hours are fictional, and the demo enquiry works only in this browser.</p>'
+  +     '<div style="margin-top:34px">'+DATA.aboutValues.map(function(v,i){
+          return '<div class="hrow" style="border-top:1px solid var(--line);padding:15px 0;align-items:flex-start"><span style="font-family:var(--serif);font-style:italic;color:var(--rose-deep);min-width:44px">0'+(i+1)+'</span><span style="text-align:left;color:var(--ink-soft);font-size:.8rem;line-height:1.65"><b style="color:var(--ink);font-weight:600">'+esc(v.h)+'</b> — '+esc(v.p)+'</span></div>';
+        }).join('')+'</div>'
+  +   '</div>'
+  +   '<div class="story-art" style="min-height:430px">'
+  +     '<div class="story-frame" style="transform:rotate(2deg)"><img data-k="story" alt="Concept imagery: hair in warm light, close crop." loading="lazy"></div>'
+  +     '<p class="story-note">Concept imagery · illustrative only</p>'
+  +   '</div>'
+  + '</div>'
+  + '<div style="margin-top:70px"><div class="section-head"><div class="left"><p class="eyebrow">The imagined team</p><h2 class="h-sec">Fiction, with good <span class="it">manners.</span></h2></div></div>'
+  + '<div class="people-grid" data-reveal-group>'+DATA.people.map(personCard).join('')+'</div></div>'
+  + '</section>';
+}
+
+function contactPage(){
+  var opts = DATA.services.map(function(s){
+    return '<option value="'+s.id+'"'+(s.id===selectedService?' selected':'')+'>'+esc(s.name)+' · '+s.dur+' min · '+money(s.price)+' sample</option>';
+  }).join('');
+  return ''
+  + '<section class="page-top wrap"><div class="page-heading">'
+  +   '<p class="eyebrow">Demo enquiry · nothing is sent</p>'
+  +   '<h1>Let’s make <span class="it">a little time.</span></h1>'
+  +   '<p class="lede">Try the local demo form to preview an enquiry. It reserves nothing, stores nothing, and contacts no one.</p>'
+  + '</div></section>'
+  + '<section class="page-body wrap contact-grid">'
+  + '<form class="enq" id="enqForm" novalidate>'
+  +   '<span class="chip" style="align-self:flex-start">Demo form · no data leaves this page</span>'
+  +   '<p class="lede" style="margin:2px 0 4px;font-size:.78rem">Fields marked * build a temporary preview in this page only.</p>'
+  +   '<div class="frow">'
+  +     '<div class="f"><label for="fName">Your name *</label><input id="fName" name="name" autocomplete="name" maxlength="80" placeholder="How should we address you?"><p class="ferr" data-err="fName" aria-live="polite"></p></div>'
+  +     '<div class="f"><label for="fMail">Email (for this demo) *</label><input id="fMail" name="email" type="email" autocomplete="email" maxlength="120" placeholder="name@example.com"><p class="ferr" data-err="fMail" aria-live="polite"></p></div>'
+  +   '</div>'
+  +   '<div class="frow">'
+  +     '<div class="f"><label for="fSvc">Sample service *</label><select id="fSvc" name="service">'+opts+'</select><p class="ferr" data-err="fSvc" aria-live="polite"></p></div>'
+  +     '<div class="f"><label for="fDay">Preferred day *</label><input id="fDay" name="day" type="date"><p class="ferr" data-err="fDay" aria-live="polite"></p></div>'
+  +   '</div>'
+  +   '<div class="f"><label for="fNote">Anything you’d like to share? <span class="chip chip--plain" style="vertical-align:1px">Optional</span></label><textarea id="fNote" name="note" maxlength="350" placeholder="A little note for your demo preview"></textarea></div>'
+  +   '<p class="ferr" id="fTop" role="alert"></p>'
+  +   '<div class="hero-actions" style="margin-top:2px">'
+  +     '<button class="btn btn--rose" type="submit" data-magnetic>Preview demo enquiry <span class="a" aria-hidden="true">↗</span></button>'
+  +     '<button class="btn btn--ghost" type="button" id="waBtn">Preview WhatsApp message</button>'
+  +   '</div>'
+  +   '<p class="section-note" style="margin-top:2px">Nothing you enter is stored or transmitted. No slot is reserved — a real studio would confirm availability with you.</p>'
+  +   '<div id="enqResult" hidden></div>'
+  + '</form>'
+  + '<aside>'
+  +   '<div class="info"><p class="eyebrow">A little logistics</p><h3 style="margin-top:10px">Sample hours</h3>'
+  +     DATA.hours.map(function(h){ return '<div class="hrow"><span>'+esc(h.d)+'</span><span>'+esc(h.t)+'</span></div>'; }).join('')
+  +   '<p class="section-note">Illustrative hours only · not a real schedule.</p></div>'
+  +   '<div class="info"><p class="eyebrow">Where it might be</p><h3 style="margin-top:10px">Made-up, on purpose.</h3>'
+  +   '<p>A “Gurgaon, India” style placeholder — no real address, phone number, map pin, or booking link is connected to this concept.</p>'
+  +   '<button class="btn btn--ghost" type="button" id="waBtn2" style="margin-top:14px;width:100%">Preview a WhatsApp enquiry</button>'
+  +   '<p class="section-note">Demo button · message preview only. Nothing is sent.</p></div>'
+  + '</aside>'
+  + '</section>';
+}
+
+function notFoundPage(){
+  return '<section class="page-top wrap" style="min-height:52vh"><div class="page-heading">'
+  + '<p class="eyebrow">A page of its own</p>'
+  + '<h1>This page isn’t part of <span class="it">the concept.</span></h1>'
+  + '<p class="lede">The route you followed doesn’t exist here. Head back to the studio home and explore from there.</p>'
+  + '<p style="margin-top:26px"><a class="btn" href="#/" data-nav>Back to home <span class="a" aria-hidden="true">↗</span></a></p>'
+  + '</div></section>';
+}
+
+/* ---------- router ---------- */
+var VIEWS = { '/':homePage, '/services':servicesPage, '/gallery':galleryPage, '/about':aboutPage, '/contact':contactPage };
+var TITLES = {
+  '/':'Mira Studio — Hair, skin & a little time for yourself',
+  '/services':'Services & sample prices — Mira Studio (concept)',
+  '/gallery':'Gallery — Mira Studio (concept)',
+  '/about':'Our approach — Mira Studio (concept)',
+  '/contact':'Book (demo) — Mira Studio (concept)'
+};
+
+function routeNow(){
+  var raw = (location.hash||'').replace(/^#/,'').split('?')[0];
+  raw = raw.replace(/\/+$/,'');
+  return raw || '/';
+}
+function render(){
+  var route = routeNow();
+  var view = VIEWS[route];
+  killStrands();
+  if(pageCtx){ try{ pageCtx.revert(); }catch(e){} pageCtx = null; }
+  PAGE.innerHTML = view ? view() : notFoundPage();
+  document.title = TITLES[route] || 'Not found — Mira Studio (concept)';
+  $$('.site-nav [data-route]').forEach(function(a){
+    if(a.getAttribute('data-route') === route.slice(1)) a.setAttribute('aria-current','page');
+    else a.removeAttribute('aria-current');
+  });
+  hydrate(PAGE);
+  currentRoute = route;
+  bindPageBits(route);
+  try{ PAGE.focus({preventScroll:true}); }catch(e){}
+  requestAnimationFrame(function(){ try{ if(window.ScrollTrigger) ScrollTrigger.refresh(); }catch(e){} });
+}
+function animateCurrent(){
+  if(!window.gsap || RM){ root.classList.remove('pre'); magnetics(); return; }
+  try{
+    pageCtx = gsap.context(function(){
+      if(currentRoute === '/' ){
+        heroIntro();
+        marquee();
+        var o2 = $('.o2'); if(o2) gsap.to(o2,{rotation:360,duration:70,repeat:-1,ease:'none'});
+        var stamp = $('.hero-stamp svg'); if(stamp) gsap.to(stamp,{rotation:360,duration:55,repeat:-1,ease:'none',transformOrigin:'50% 50%'});
+        var fc = $('.fc-hours'); if(fc) gsap.to(fc,{y:-8,duration:3.4,yoyo:true,repeat:-1,ease:'sine.inOut'});
+      }
+      reveals();
+    }, PAGE);
+  }catch(e){ root.classList.remove('pre'); }
+  if(!$('.hero-h1')) root.classList.remove('pre');
+  magnetics();
+}
+function transition(){
+  var animated = CAN && currentRoute !== null;
+  var fired = false;
+  var finish = function(){
+    if(fired) return;
+    fired = true;
+    render();
+    if(window.__lenis){ try{ window.__lenis.scrollTo(0,{immediate:true}); }catch(e){ window.scrollTo(0,0); } }
+    else window.scrollTo(0,0);
+    if(animated && window.gsap){ gsap.fromTo(PAGE,{opacity:0,y:22},{opacity:1,y:0,duration:.6,ease:'power3.out',clearProps:'all'}); }
+    animateCurrent();
+  };
+  if(animated){
+    gsap.to(PAGE,{opacity:0,y:16,duration:.26,ease:'power2.in',onComplete:finish});
+    setTimeout(finish, 420);
+  } else { finish(); }
+}
+
+/* ---------- per-page bindings ---------- */
+function bindPageBits(route){
+  if(route === '/services') initFilters();
+  if(route === '/contact'){
+    var day = $('#fDay');
+    if(day){ day.min = new Date().toISOString().slice(0,10); }
+    var form = $('#enqForm'); if(form) form.addEventListener('submit', onEnqSubmit);
+    var w1 = $('#waBtn'); if(w1) w1.addEventListener('click', waPreview);
+    var w2 = $('#waBtn2'); if(w2) w2.addEventListener('click', waPreview);
+  }
+}
+
+/* ---------- hero / reveals / marquee ---------- */
+function safe(tw, ms){
+  if(!tw) return tw;
+  setTimeout(function(){
+    try{
+      if(tw.progress() === 0 && !tw.paused()){
+        var trig = tw.scrollTrigger;
+        if(!trig || (window.scrollY + window.innerHeight) > ((trig.start || 0) + 4)){
+          tw.kill();
+          gsap.set(tw.targets(), { clearProps:'all' });
+        }
+      }
+    }catch(e){}
+  }, ms || 4200);
+  return tw;
+}
+function heroIntro(){
+  safe(gsap.fromTo('.hero-card-wrap',{opacity:0,y:34,rotate:-1.5},{opacity:1,y:0,rotate:0,duration:1.25,ease:'power3.out',delay:.24}));
+  safe(gsap.fromTo('.hero [data-fade]',{opacity:0,y:16},{opacity:1,y:0,duration:.85,stagger:.07,ease:'power3.out',delay:.5}));
+  safe(gsap.fromTo('.hero-stamp',{opacity:0,scale:.8},{opacity:1,scale:1,duration:.9,ease:'power3.out',delay:.9}));
+  safe(gsap.fromTo('.float-card',{opacity:0,y:18},{opacity:1,y:0,duration:.8,ease:'power3.out',delay:1.05}));
+  safe(gsap.fromTo('.scroll-cue',{opacity:0},{opacity:1,duration:.8,ease:'power3.out',delay:1.2}));
+  root.classList.remove('pre');
+  initStrands();
+}
+function reveals(){
+  $$('[data-reveal]').forEach(function(el){
+    safe(gsap.from(el,{y:30,opacity:0,duration:.95,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 85%',once:true}}));
+  });
+  $$('[data-reveal-group]').forEach(function(group){
+    if(!group.children.length) return;
+    safe(gsap.from(group.children,{y:26,opacity:0,duration:.85,stagger:.08,ease:'power3.out',scrollTrigger:{trigger:group,start:'top 82%',once:true}}));
+  });
+  var end = $('.end');
+  if(end && $('.end-h2')) safe(gsap.from('.end-h2',{y:30,opacity:0,duration:1,ease:'power3.out',scrollTrigger:{trigger:end,start:'top 74%',once:true}}));
+  var sf = $('#storyFrame');
+  if(sf && sf.querySelector('img')) gsap.fromTo(sf.querySelector('img'),{yPercent:-5},{yPercent:5,ease:'none',scrollTrigger:{trigger:sf,start:'top bottom',end:'bottom top',scrub:true}});
+  var chip = $('#storyChip');
+  if(chip) gsap.to(chip,{y:-14,rotate:1.2,ease:'none',scrollTrigger:{trigger:'.band',start:'top bottom',end:'bottom top',scrub:true}});
+  $$('.gal-card').forEach(function(card,i){
+    safe(gsap.fromTo(card,{clipPath:'inset(100% 0% 0% 0%)'},{clipPath:'inset(0% 0% 0% 0%)',duration:1.15,ease:'expo.out',delay:(i%3)*.07,scrollTrigger:{trigger:card,start:'top 90%',once:true}}));
+    var inner = card.querySelector('.gal-inner');
+    if(inner) gsap.fromTo(inner,{yPercent:-6},{yPercent:6,ease:'none',scrollTrigger:{trigger:card,start:'top bottom',end:'bottom top',scrub:true}});
+  });
+  var steps = $('[data-steps-line]');
+  if(steps) gsap.fromTo(steps,{scaleX:0},{scaleX:1,duration:1.4,ease:'power3.out',scrollTrigger:{trigger:steps,start:'top 88%',once:true},transformOrigin:'left center'});
+  var heroCard = $('#heroCardWrap');
+  if(heroCard){
+    gsap.to(heroCard,{y:-30,ease:'none',scrollTrigger:{trigger:'#hero',start:'top top',end:'bottom top',scrub:true}});
+  }
+  var canvas = $('#strands');
+  if(canvas) gsap.to(canvas,{y:-40,ease:'none',scrollTrigger:{trigger:'#hero',start:'top top',end:'bottom top',scrub:true}});
+}
+function marquee(){
+  var track = $('.mq-track');
+  if(!track || track._running) return;
+  track._running = true;
+  var tw = gsap.to(track,{xPercent:-50,duration:30,ease:'none',repeat:-1});
+  var ticker = track.closest('.ticker');
+  if(ticker){
+    ticker.addEventListener('mouseenter',function(){ gsap.to(tw,{timeScale:.25,duration:.6}); });
+    ticker.addEventListener('mouseleave',function(){ gsap.to(tw,{timeScale:1,duration:.6}); });
+  }
+}
+function magnetics(){
+  if(!CAN || !window.gsap) return;
+  var fine = true; try{ fine = window.matchMedia('(pointer:fine)').matches; }catch(e){}
+  if(!fine) return;
+  $$('[data-magnetic]').forEach(function(el){
+    if(el._mag) return; el._mag = true;
+    var xt = gsap.quickTo(el,'x',{duration:.4,ease:'power3'});
+    var yt = gsap.quickTo(el,'y',{duration:.4,ease:'power3'});
+    el.addEventListener('mousemove',function(ev){
+      var r = el.getBoundingClientRect();
+      xt((ev.clientX - r.left - r.width/2)*.22);
+      yt((ev.clientY - r.top - r.height/2)*.3);
+    });
+    el.addEventListener('mouseleave',function(){ xt(0); yt(0); });
+  });
+}
+
+/* ---------- strand canvas ---------- */
+var strands = { raf:0, cleanup:null };
+function killStrands(){
+  if(strands.raf){ cancelAnimationFrame(strands.raf); strands.raf = 0; }
+  if(strands.cleanup){ try{ strands.cleanup(); }catch(e){} strands.cleanup = null; }
+  if(window.__ampSet) window.__ampSet = null;
+}
+function initStrands(){
+  var canvas = $('#strands');
+  if(!canvas || RM) return;
+  var c2 = null; try{ c2 = canvas.getContext('2d'); }catch(e){}
+  if(!c2) return;
+  var host = canvas.parentElement;
+  var W=1,H=1, DPR = Math.min(window.devicePixelRatio||1, 1.6);
+  var arr = [], t=0, boost=0, targetBoost=0, visible = true;
+  var mouse = {x:-9999,y:-9999,tx:-9999,ty:-9999};
+  function rnd(a,b){ return a + Math.random()*(b-a); }
+  function build(){
+    var n = window.innerWidth < 760 ? 30 : 62;
+    arr = [];
+    for(var i=0;i<n;i++){
+      arr.push({ x:(i+.5)/n*W, off:rnd(-16,16), len:H*rnd(.55,1.02), lean:rnd(-.14,.14), sway:rnd(8,22), speed:rnd(.1,.3), phase:rnd(0,6.28), w:rnd(.5,1.3), rose:Math.random()<.15, a:rnd(.05,.11) });
+    }
+  }
+  function size(){
+    var r = host.getBoundingClientRect();
+    W = Math.max(1,r.width); H = Math.max(1,r.height);
+    canvas.width = W*DPR; canvas.height = H*DPR;
+    canvas.style.width = W+'px'; canvas.style.height = H+'px';
+    c2.setTransform(DPR,0,0,DPR,0,0);
+    build();
+  }
+  function frame(){
+    if(!strands.raf) return;
+    strands.raf = requestAnimationFrame(frame);
+    if(!visible || document.hidden) return;
+    t += .016;
+    boost += (targetBoost-boost)*.06; targetBoost *= .93;
+    mouse.x += (mouse.tx-mouse.x)*.07; mouse.y += (mouse.ty-mouse.y)*.07;
+    c2.clearRect(0,0,W,H);
+    for(var i=0;i<arr.length;i++){
+      var s = arr[i];
+      c2.beginPath();
+      for(var k=0;k<=5;k++){
+        var p = k/5, y = p*s.len + 14;
+        var x = s.x + s.off + s.lean*y + Math.sin(t*s.speed*2 + s.phase + p*3.2)*s.sway*(.35+p*.65) + boost*Math.sin(s.phase)*16;
+        var dx = x-mouse.x, dy = y-mouse.y, d2 = dx*dx+dy*dy;
+        if(d2 < 24000){ var f = 1 - d2/24000, dl = Math.sqrt(d2)||1; x += dx/dl*f*24; }
+        if(k===0) c2.moveTo(x,y); else c2.lineTo(x,y);
+      }
+      c2.lineWidth = s.w; c2.lineCap = 'round';
+      c2.strokeStyle = s.rose ? 'rgba(179,113,124,'+(s.a*1.35)+')' : 'rgba(43,33,24,'+s.a+')';
+      c2.stroke();
+    }
+  }
+  size();
+  var onResize = function(){ size(); };
+  window.addEventListener('resize', onResize);
+  var io = null;
+  try{ io = new IntersectionObserver(function(en){ visible = en[0].isIntersecting; },{threshold:0}); io.observe(host); }catch(e){}
+  var onMove = function(e){
+    var r = host.getBoundingClientRect();
+    mouse.tx = e.clientX - r.left; mouse.ty = e.clientY - r.top;
+  };
+  document.addEventListener('mousemove', onMove);
+  window.__ampSet = function(v){ targetBoost = Math.min(2.2, v); };
+  strands.raf = requestAnimationFrame(frame);
+  strands.cleanup = function(){
+    window.removeEventListener('resize', onResize);
+    document.removeEventListener('mousemove', onMove);
+    if(io) io.disconnect();
+    window.__ampSet = null;
+  };
+}
+
+/* ---------- dialogs ---------- */
+function openDialog(dlg){
+  if(!dlg || dlg.open) return;
+  dlg.showModal();
+  if(CAN){
+    gsap.fromTo(dlg,{opacity:0,y:16,scale:.98},{opacity:1,y:0,scale:1,duration:.4,ease:'power3.out',clearProps:'all'});
+  }
+}
+function closeDialog(dlg){
+  if(!dlg || !dlg.open || dlg._closing) return;
+  if(CAN){
+    dlg._closing = true;
+    var shut = function(){
+      try{ if(dlg.open) dlg.close(); }catch(e){}
+      dlg._closing = false;
+      try{ gsap.set(dlg,{clearProps:'all'}); }catch(e){}
+    };
+    gsap.to(dlg,{opacity:0,y:10,duration:.22,ease:'power2.in',onComplete:shut});
+    setTimeout(shut, 420);
+  } else { dlg.close(); }
+}
+var lbIndex = 0;
+function paintLightbox(){
+  var k = DATA.photos[lbIndex]; var g = DATA.gallery[k];
+  var im = $('#lbImg'); if(im){ im.src = imgSrc(k); im.alt = g.alt; }
+  var ti = $('#lbTitle'); if(ti) ti.textContent = g.title;
+  var ca = $('#lbCap'); if(ca) ca.textContent = g.cat + ' · illustrative concept imagery';
+}
+function openLightbox(k){
+  lbIndex = Math.max(0, DATA.photos.indexOf(k));
+  paintLightbox();
+  openDialog($('#lightbox'));
+}
+
+/* ---------- whatsapp + form ---------- */
+function currentSvcObj(){
+  var sel = $('#fSvc');
+  var id = sel && sel.value ? sel.value : selectedService;
+  for(var i=0;i<DATA.services.length;i++){ if(DATA.services[i].id === id) return DATA.services[i]; }
+  return DATA.services[0];
+}
+function waPreview(){
+  var nameEl = $('#fName'); var dayEl = $('#fDay');
+  var svc = currentSvcObj();
+  var name = (nameEl && nameEl.value.trim()) || '[your name]';
+  var day = (dayEl && dayEl.value) || '[preferred day]';
+  var text = 'Hello Mira Studio, I’d like to ask about ' + svc.name + ' (' + svc.dur + ' min · sample ' + money(svc.price) + ') on ' + day + '.\n\nName: ' + name + '\n\n[Preview only — no message is sent.]';
+  var pv = $('#waPreview'); if(pv) pv.textContent = text;
+  openDialog($('#waDialog'));
+}
+function onEnqSubmit(e){
+  e.preventDefault();
+  var name = $('#fName'), mail = $('#fMail'), day = $('#fDay');
+  var errs = {};
+  if(!name.value.trim()) errs.fName = 'Please add your name for the preview.';
+  if(!mail.value.trim()) errs.fMail = 'Add an email so the preview shows a reply-to.';
+  else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail.value.trim())) errs.fMail = 'That email looks off — mind checking it?';
+  if(!day.value) errs.fDay = 'Choose a preferred day (today or later).';
+  else if(day.min && day.value < day.min) errs.fDay = 'That day is in the past — pick another one.';
+  ['fName','fMail','fSvc','fDay'].forEach(function(id){
+    var el = $('#'+id), p = $('[data-err="'+id+'"]');
+    var msg = errs[id] || '';
+    if(el) el.setAttribute('aria-invalid', msg ? 'true' : 'false');
+    if(p) p.textContent = msg;
+  });
+  var top = $('#fTop');
+  var firstBad = $('[aria-invalid="true"]');
+  if(firstBad){ if(top) top.textContent = 'Please review the highlighted fields — nothing has been sent.'; firstBad.focus(); return; }
+  if(top) top.textContent = '';
+  var svc = currentSvcObj();
+  var d = new Date(day.value + 'T12:00:00');
+  var dayTxt = d.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  var note = $('#fNote').value.trim();
+  var box = $('#enqResult');
+  if(!box) return;
+  box.hidden = false;
+  box.innerHTML = '<div class="slip">'
+    + '<div class="slip-head"><h3>Enquiry preview</h3><span class="slip-stamp">Demo · not sent</span></div>'
+    + '<div class="srow"><span class="k">Service</span><span class="v">'+esc(svc.name)+' · '+svc.dur+' min · '+money(svc.price)+' sample</span></div>'
+    + '<div class="srow"><span class="k">Preferred day</span><span class="v">'+esc(dayTxt)+'</span></div>'
+    + '<div class="srow"><span class="k">Name</span><span class="v">'+esc(name.value.trim())+'</span></div>'
+    + (note ? '<div class="srow"><span class="k">Note</span><span class="v">'+esc(note)+'</span></div>' : '')
+    + '<p class="slip-note">Prepared in this browser only — nothing was stored or sent, and no slot is reserved. A real studio would confirm availability with you.</p>'
+    + '</div>';
+  if(CAN){
+    gsap.fromTo(box,{opacity:0,y:26,rotate:1.2},{opacity:1,y:0,rotate:0,duration:.7,ease:'power3.out',clearProps:'all'});
+    gsap.from(box.querySelectorAll('.slip-head,.srow,.slip-note'),{opacity:0,y:12,duration:.5,stagger:.06,delay:.15,ease:'power2.out',clearProps:'all'});
+  }
+  try{ box.scrollIntoView({behavior: RM ? 'auto' : 'smooth', block:'nearest'}); }catch(e2){}
+}
+
+/* ---------- filters ---------- */
+var fState = { cat:'All', dur:180, sort:'featured' };
+function initFilters(){
+  var chips = $$('#fChips .fchip');
+  chips.forEach(function(c){
+    c.addEventListener('click', function(){
+      fState.cat = c.getAttribute('data-cat');
+      chips.forEach(function(x){ x.setAttribute('aria-pressed', String(x === c)); });
+      updateResults(true);
+    });
+  });
+  var range = $('#fDur');
+  if(range) range.addEventListener('input', function(ev){ fState.dur = +ev.target.value; var o=$('#fDurOut'); if(o) o.textContent = fState.dur + ' min'; updateResults(false); });
+  var sort = $('#fSort');
+  if(sort) sort.addEventListener('change', function(ev){ fState.sort = ev.target.value; updateResults(true); });
+  updateResults(false, true);
+}
+function updateResults(animate, first){
+  var list = DATA.services.filter(function(s){
+    return (fState.cat === 'All' || s.cat === fState.cat) && s.dur <= fState.dur;
+  });
+  if(fState.sort === 'price') list = list.slice().sort(function(a,b){ return a.price-b.price; });
+  if(fState.sort === 'dur') list = list.slice().sort(function(a,b){ return a.dur-b.dur; });
+  var count = $('#fCount');
+  if(count) count.innerHTML = '<strong>'+list.length+'</strong> of '+DATA.services.length+' sample services shown · prices are illustrative';
+  var grid = $('#svcResults');
+  if(!grid) return;
+  if(!list.length){ grid.innerHTML = '<p class="fempty">No sample services match those filters. Try a longer duration or another category.</p>'; return; }
+  grid.innerHTML = list.map(svcCard).join('');
+  if(CAN && animate && window.gsap){
+    gsap.from(grid.children,{opacity:0,y:12,duration:.4,stagger:.05,ease:'power2.out',clearProps:'all'});
+  }
+}
+
+/* ---------- scroll plumbing ---------- */
+function onScrollTick(y, progress){
+  if(progressEl) progressEl.style.transform = 'scaleX(' + (progress||0) + ')';
+  if(header) header.classList.toggle('is-scrolled', y > 12);
+  var show = y > 520 && currentRoute !== '/contact' && currentRoute !== null;
+  if(mCta) mCta.classList.toggle('is-shown', !!show);
+}
+function toggleDrawer(){
+  var d = $('#navDrawer'), b = $('#menuToggle');
+  if(!d || !b) return;
+  var open = !d.classList.contains('is-open');
+  d.classList.toggle('is-open', open);
+  b.setAttribute('aria-expanded', String(open));
+  b.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  try{ if(window.__lenis){ open ? window.__lenis.stop() : window.__lenis.start(); } }catch(e){}
+}
+function closeDrawer(){
+  var d = $('#navDrawer'); if(!d) return;
+  if(!d.classList.contains('is-open')) return;
+  d.classList.remove('is-open');
+  var b = $('#menuToggle'); if(b){ b.setAttribute('aria-expanded','false'); b.setAttribute('aria-label','Open menu'); }
+  try{ if(window.__lenis) window.__lenis.start(); }catch(e){}
+}
+
+/* ---------- global listeners ---------- */
+document.addEventListener('click', function(e){
+  var t = e.target;
+  if(!t || !t.closest) return;
+  var nav = t.closest('a[data-nav]');
+  if(nav){
+    var href = nav.getAttribute('href') || '';
+    if(href.indexOf('#/') === 0){
+      e.preventDefault();
+      closeDrawer();
+      if(location.hash === href){ transition(); } else { location.hash = href; }
+    }
+    return;
+  }
+  if(t.closest('#menuToggle')){ toggleDrawer(); return; }
+  if(t.id === 'navDrawer'){ closeDrawer(); return; }
+  if(t.closest('.drawer-close')){ closeDrawer(); return; }
+  var enq = t.closest('[data-enquire]');
+  if(enq){
+    selectedService = enq.getAttribute('data-enquire');
+    if(location.hash === '#/contact'){ render(); animateCurrent(); } else { location.hash = '#/contact'; }
+    return;
+  }
+  var gal = t.closest('[data-gal]');
+  if(gal){ openLightbox(gal.getAttribute('data-gal')); return; }
+  var close = t.closest('[data-close]');
+  if(close){ closeDialog(close.closest('dialog')); return; }
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){ closeDrawer(); return; }
+  var lb = $('#lightbox');
+  if(lb && lb.open){
+    if(e.key === 'ArrowRight'){ lbIndex = (lbIndex+1) % DATA.photos.length; paintLightbox(); }
+    if(e.key === 'ArrowLeft'){ lbIndex = (lbIndex+DATA.photos.length-1) % DATA.photos.length; paintLightbox(); }
+  }
+});
+document.addEventListener('mousemove', function(e){
+  if(!CAN) return;
+  var fine = true; try{ fine = window.matchMedia('(pointer:fine)').matches; }catch(e2){}
+  if(!fine) return;
+  var svc = e.target && e.target.closest ? e.target.closest('.svc') : null;
+  if(svc){
+    var r = svc.getBoundingClientRect();
+    svc.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+    svc.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+  }
+  var stage = $('#heroStage');
+  var wrap = $('#heroCardWrap');
+  if(stage && wrap && window.gsap){
+    var sr = stage.getBoundingClientRect();
+    var dx = (e.clientX - sr.left) / sr.width - .5;
+    var dy = (e.clientY - sr.top) / sr.height - .5;
+    var inside = e.clientX >= sr.left && e.clientX <= sr.right && e.clientY >= sr.top && e.clientY <= sr.bottom;
+    if(!wrap._ry){ wrap._ry = gsap.quickTo(wrap,'rotationY',{duration:.7,ease:'power3'}); wrap._rx = gsap.quickTo(wrap,'rotationX',{duration:.7,ease:'power3'}); }
+    if(inside){ wrap._ry(dx*7); wrap._rx(-dy*5.5); }
+    else if(wrap._inside){ wrap._ry(0); wrap._rx(0); }
+    wrap._inside = inside;
+  }
+});
+$$('dialog').forEach(function(dlg){
+  dlg.addEventListener('click', function(e){ if(e.target === dlg) closeDialog(dlg); });
+  dlg.addEventListener('close', function(){ try{ if(window.gsap) gsap.set(dlg,{clearProps:'all'}); }catch(e2){} dlg._closing = false; });
+});
+window.addEventListener('hashchange', transferGuard);
+function transferGuard(){ transition(); }
+
+/* ---------- boot ---------- */
+function finishLibs(ok){
+  CAN = ok && !RM;
+  if(ok){
+    try{ gsap.registerPlugin(ScrollTrigger); }catch(e){}
+    if(window.Lenis && !RM){
+      try{
+        var lenis = new Lenis({ duration:1.15, smoothWheel:true });
+        window.__lenis = lenis;
+        lenis.on('scroll', function(inst){
+          onScrollTick(inst.scroll || 0, inst.progress || 0);
+          if(window.__ampSet) window.__ampSet(Math.abs(inst.velocity || 0) * .5);
+          try{ ScrollTrigger.update(); }catch(e2){}
+        });
+        gsap.ticker.add(function(t){ lenis.raf(t * 1000); });
+        gsap.ticker.lagSmoothing(0);
+      }catch(e){ window.__lenis = null; }
+    }
+    if(!window.__lenis){
+      window.addEventListener('scroll', function(){
+        var y = window.scrollY || window.pageYOffset || 0;
+        var h = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        onScrollTick(y, y / h);
+      }, { passive:true });
+    }
+  }
+  animateCurrent();
+}
+function boot(){
+  setTimeout(function(){ if(root.classList.contains('pre')) root.classList.remove('pre'); }, 2600);
+  render();
+  var waited = 0;
+  (function check(){
+    var ok = !!(window.gsap && window.ScrollTrigger);
+    if(ok){ finishLibs(true); return; }
+    if(waited > 2400){ finishLibs(false); return; }
+    waited += 120;
+    setTimeout(check, 120);
+  })();
+}
+if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', boot); }
+else { boot(); }
+
+})();
+</script>
+</body>
+</html>
