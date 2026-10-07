@@ -6,15 +6,15 @@ Web design concept samples — hand-built, self-contained, motion-first. Every s
 
 | Sample | Live | What it is |
 |---|---|---|
-| Mira Studio | [open](https://prathamsethiongithub.github.io/concept-sites/mira-studio/) | Hair & skin studio (fictional). Editorial concept with a GSAP + Lenis motion system, scroll-reactive strand-field canvas, and a demo booking slip. |
+| Mira Studio | [open](https://prathamsethiongithub.github.io/concept-sites/mira-studio/) | Hair, colour & scalp-care studio (fictional). Editorial concept with a GSAP + Lenis motion system, a scroll-reactive strand-field canvas, a consultation-first finder, a 4-step demo booking walkthrough, and a strand-QR that gathers into a scannable code. |
 
 ## Layout
 
 Each sample folder contains:
 
-- `index.html` — the deployable site, fully self-contained (imagery inlined, CDN libs only).
-- `docs/` — the creative brief, full copy, and screenshots.
-- `_build/` — source parts and the build script (`python _build/build.py` reassembles `index.html`; it expects the working image library at `../_direction`, which is not committed).
+- `index.html` — the deployable page: a static home snapshot (renders without JS) plus the app; CDN libs only. Imagery lives in `assets/` as responsive WebP + JPEG pairs.
+- `docs/` — creative brief, full copy, **CHANGELOG.md**, **ASSETS.md** (image sources + licences), and screenshots.
+- `_build/` — source parts and the build script (`python _build/build.py` reassembles `index.html`, generates the QR + responsive images; it expects the working image library at `../_direction`, which is not committed).
 
 ## Notes
 
