@@ -1422,9 +1422,9 @@ function initQr(){
     qr.raf = requestAnimationFrame(frame);
     if(!visible || document.hidden) return;
     t += .016;
-    if(Math.abs(progT - prog) > .001){ prog += (progT - prog) * .045; }
+    if(Math.abs(progT - prog) > .001){ prog += (progT - prog) * .07; }
     else { prog = progT; }
-    if(progT === 1 && !settled && prog > .995){ settled = true; panel.classList.add('is-on'); }
+    if(progT === 1 && !settled && prog > .99){ settled = true; panel.classList.add('is-on'); }
     if(progT === 0 && settled && prog < .02){ settled = false; panel.classList.remove('is-on'); }
     c2.clearRect(0,0,W,W);
     var e = ease(Math.max(0, Math.min(1, prog)));
