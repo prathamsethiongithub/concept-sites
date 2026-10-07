@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+<link rel="preload" as="image" type="image/webp" href="assets/mira-hero-880.webp" imagesrcset="assets/mira-hero-440.webp 440w, assets/mira-hero-880.webp 880w" imagesizes="(max-width:760px) 88vw, 440px">
 <script>
 /* Motion flag: pre-paint hidden states only when motion is welcome and JS is running. */
 (function(){ try { if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){ document.documentElement.classList.add('pre'); } } catch(e){} })();
@@ -263,7 +264,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:420;margin:0;text-wrap:balance}
 .mq-set i{font-style:normal;color:var(--rose);font-size:.95rem}
 
 /* 08 · PRE-PAINT MOTION STATES ------------------------------- */
-.pre .hero [data-fade],.pre .scroll-cue{opacity:0}
+.pre .scroll-cue{opacity:0}
 .pre .hero-card-wrap,.pre .hero-stamp,.pre .float-card{opacity:0}
 
 /* 09 · GRAIN + PROGRESS -------------------------------------- */

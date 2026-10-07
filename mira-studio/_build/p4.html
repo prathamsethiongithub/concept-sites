@@ -463,7 +463,6 @@ function safe(tw, ms){
 }
 function heroIntro(){
   safe(gsap.fromTo('.hero-card-wrap',{opacity:0,y:34,rotate:-1.5},{opacity:1,y:0,rotate:0,duration:1.25,ease:'power3.out',delay:.24}));
-  safe(gsap.fromTo('.hero [data-fade]',{opacity:0,y:16},{opacity:1,y:0,duration:.85,stagger:.07,ease:'power3.out',delay:.5}));
   safe(gsap.fromTo('.hero-stamp',{opacity:0,scale:.8},{opacity:1,scale:1,duration:.9,ease:'power3.out',delay:.9}));
   safe(gsap.fromTo('.float-card',{opacity:0,y:18},{opacity:1,y:0,duration:.8,ease:'power3.out',delay:1.05}));
   safe(gsap.fromTo('.scroll-cue',{opacity:0},{opacity:1,duration:.8,ease:'power3.out',delay:1.2}));

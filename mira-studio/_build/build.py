@@ -97,6 +97,15 @@ if '__QR_MATRIX__' not in html:
     raise SystemExit('QR token missing from p4')
 html = html.replace('__QR_MATRIX__', qr_json)
 
+# static home snapshot -> first paint without waiting for JS
+snap_path = os.path.join(BUILD, 'home-snapshot.html')
+if not os.path.exists(snap_path):
+    raise SystemExit('missing _build/home-snapshot.html (regenerate from the browser)')
+if '<!--STATIC_HOME-->' not in html:
+    raise SystemExit('static home token missing from p3')
+snap = open(snap_path, encoding='utf-8').read()
+html = html.replace('<!--STATIC_HOME-->', snap)
+
 left = re.findall(r'__[A-Z_]+__', html)
 if left:
     raise SystemExit('unreplaced tokens: %r' % left)
