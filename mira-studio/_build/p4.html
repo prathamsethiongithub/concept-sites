@@ -391,7 +391,7 @@ function render(){
   var route = routeNow();
   var anchor = null;
   if(!VIEWS[route] && route.length > 1){
-    var aid = route.slice(1);
+    var aid = route.charAt(0) === '/' ? route.slice(1) : route;
     if(aid === 'enqForm'){ route = '/contact'; anchor = aid; }
     else if(aid === 'finder' || aid === 'findTitle'){ route = '/'; anchor = aid; }
   }
