@@ -252,9 +252,9 @@ dialog::backdrop{background:rgba(30,22,20,.5)}
   .site-header.is-scrolled .header-inner{min-height:58px}
   .site-nav{display:none}
   .menu-toggle{display:block}
-  .hero{padding-top:30px}
-  .hero-h1{font-size:clamp(3rem,14vw,4.6rem)}
-  .hero-stage{min-height:400px}
+  .hero{padding-top:14px}
+  .hero-h1{font-size:clamp(2.6rem,12vw,3.9rem)}
+  .hero-stage{min-height:360px}
   .hero-card-wrap{width:min(78%,330px)}
   .hero-stamp{width:92px;height:92px;right:-12px;bottom:40px}
   .fc-hours{left:0;bottom:84px}
@@ -262,7 +262,13 @@ dialog::backdrop{background:rgba(30,22,20,.5)}
   .hero-caption{left:0;bottom:-34px}
   .mq-set{padding:12px 13px;gap:22px}
   .mq-set b{font-size:1.08rem}
-  .section{padding-block:64px}
+  .section{padding-block:54px}
+  .hero-grid{gap:22px}
+  .hero-lede{margin-top:16px}
+  .hero-actions{margin-top:22px}
+  .hero-smallprint{margin-top:16px}
+  .page-top{padding:clamp(40px,6vw,64px) 0 clamp(22px,3vw,36px)}
+  .page-body{padding-bottom:clamp(56px,7vw,88px)}
   .svc-grid{grid-template-columns:1fr;border-top:0}
   .svc{min-height:unset;padding:22px 0 26px;border-right:0!important}
   .svc-grid{border-top:1px solid var(--line)}
@@ -302,9 +308,44 @@ dialog::backdrop{background:rgba(30,22,20,.5)}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   #strands{display:none}
+  .qr-static{animation:none;opacity:1}
   .scroll-cue::after{animation:none}
   .m-cta{transition:none}
 }
+
+/* 27 · FINDER (consultation-first) --------------------------- */
+.finder .find-body{margin-top:clamp(24px,3.6vw,40px);border:1px solid var(--line);background:var(--paper-3);padding:clamp(22px,3.6vw,38px);border-radius:4px;max-width:780px}
+.find-h{font-family:var(--serif);font-size:clamp(1.25rem,2.4vw,1.6rem);letter-spacing:-.02em;margin:0 0 16px;outline:none}
+.find-result h3{font-family:var(--serif);font-size:clamp(1.5rem,2.6vw,1.9rem);letter-spacing:-.025em;margin:14px 0 8px;outline:none}
+.fr-why{color:var(--ink-soft);font-size:.86rem;line-height:1.7;max-width:520px;margin:0 0 14px}
+.finder .find-body .section-note{margin-top:16px}
+
+/* 28 · BOOKING STEPS ----------------------------------------- */
+.bsteps{display:flex;gap:16px 22px;flex-wrap:wrap;list-style:none;padding:0;margin:0 0 26px}
+.bsteps li{display:flex;align-items:center;gap:8px;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
+.bsteps li span{width:22px;height:22px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;font-size:.6rem}
+.bsteps li[aria-current="step"]{color:var(--ink)}
+.bsteps li[aria-current="step"] span{border-color:var(--rose-deep);color:var(--rose-deep)}
+.bstep-h{font-family:var(--serif);font-size:clamp(1.25rem,2.2vw,1.55rem);letter-spacing:-.02em;margin:0 0 18px;outline:none}
+.bs-label{font-size:.72rem;letter-spacing:.06em;color:var(--ink-soft);margin:0 0 16px}
+.slot-days,.slot-times{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.slot{border:1px solid var(--line);background:var(--paper-3);padding:9px 13px;font-size:.74rem;letter-spacing:.04em;color:var(--ink-soft);border-radius:999px;transition:border-color .2s,color .2s,background .2s}
+.slot:hover{border-color:var(--rose)}
+.slot[aria-pressed="true"]{background:var(--ink);color:#F6ECDF;border-color:var(--ink)}
+.bdone{border:1px solid var(--line);background:var(--paper-3);padding:clamp(20px,3vw,32px);border-radius:4px}
+.bdone .bstep-h{margin:14px 0 10px}
+.bdone p{color:var(--ink-soft);font-size:.86rem;line-height:1.7;max-width:560px}
+
+/* 29 · STRAND QR ---------------------------------------------- */
+.qr-band{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(280px,.95fr);gap:clamp(28px,5vw,70px);align-items:center}
+.qr-panel{position:relative;aspect-ratio:1/1;width:min(100%,380px);justify-self:center;border:1px solid var(--line);background:var(--paper-3);border-radius:4px;padding:10%}
+.qr-panel canvas{position:absolute;inset:10%;width:80%;height:80%}
+.qr-static{position:absolute;inset:10%;width:80%;height:80%;opacity:0;animation:qrIn .9s ease .35s forwards}
+.qr-live .qr-static{animation:none;opacity:0;transition:opacity .5s ease}
+.qr-live.is-on .qr-static{opacity:1}
+@keyframes qrIn{to{opacity:1}}
+.qr-actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:22px;align-items:center}
+@media (max-width:820px){.qr-band{grid-template-columns:1fr}.qr-panel{width:min(100%,320px)}}
 
 /* ============================================================
    ASSETS — licensed imagery used in this concept build
