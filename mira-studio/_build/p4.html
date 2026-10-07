@@ -141,7 +141,7 @@ function galleryStrip(){
   return '<div class="gal-strip">'+DATA.photos.map(function(k){ return galCard(k); }).join('')+'</div>';
 }
 function finderBlock(){
-  return '<section class="section wrap finder" aria-labelledby="findTitle"><div class="section-head">'
+  return '<section class="section wrap finder" id="finder" aria-labelledby="findTitle"><div class="section-head">'
     + '<div class="left"><p class="eyebrow"><span class="n">02</span> Find your starting point</p>'
     + '<h2 class="h-sec" id="findTitle">Not sure where to <span class="it">begin?</span></h2></div>'
     + '<div class="right"><p class="lede">Two quick taps and the concept suggests a sample service, with a plain reason. A preference helper, not a diagnosis — skip it any time for the full menu.</p>'
@@ -350,7 +350,7 @@ function contactPage(){
   +     '<h2 class="h-sec" id="qrTitle">A print-card QR, <span class="it">made of strands.</span></h2>'
   +     '<p class="lede">The studio’s strand backdrop gathers into a scannable code pointing at this concept’s booking page. Sample link, nothing behind it — and the button below is the normal route.</p>'
   +     '<div class="qr-actions">'
-  +       '<a class="btn btn--rose" href="#enqForm" id="qrBook">Request an appointment <span class="a" aria-hidden="true">↗</span></a>'
+  +       '<a class="btn btn--rose" href="#enqForm" data-scroll id="qrBook">Request an appointment <span class="a" aria-hidden="true">↗</span></a>'
   +       '<button class="btn btn--ghost" type="button" id="qrToggle">Scatter again</button>'
   +       '<a class="btn btn--ghost" href="assets/mira-qr.svg" download="mira-studio-qr.svg">Download QR</a>'
   +     '</div>'
@@ -429,12 +429,12 @@ function transition(){
     render();
     if(window.__lenis){ try{ window.__lenis.scrollTo(0,{immediate:true}); }catch(e){ window.scrollTo(0,0); } }
     else window.scrollTo(0,0);
-    if(animated && window.gsap){ gsap.fromTo(PAGE,{opacity:0,y:22},{opacity:1,y:0,duration:.6,ease:'power3.out',clearProps:'all'}); }
+    if(animated && window.gsap){ gsap.fromTo(PAGE,{opacity:0,y:16},{opacity:1,y:0,duration:.38,ease:'power3.out',clearProps:'all'}); }
     animateCurrent();
   };
   if(animated){
-    gsap.to(PAGE,{opacity:0,y:16,duration:.26,ease:'power2.in',onComplete:finish});
-    setTimeout(finish, 420);
+    gsap.to(PAGE,{opacity:0,y:12,duration:.16,ease:'power2.in',onComplete:finish});
+    setTimeout(finish, 260);
   } else { finish(); }
 }
 
@@ -642,10 +642,9 @@ function initQr(){
     }
   }
   function size(){
-    var r = panel.getBoundingClientRect();
+    var r = canvas.getBoundingClientRect();  /* the displayed 80% box, set by CSS */
     W = Math.max(1, r.width);
-    canvas.width = W*DPR; canvas.height = W*DPR;
-    canvas.style.width = W+'px'; canvas.style.height = W+'px';
+    canvas.width = Math.round(W*DPR); canvas.height = Math.round(W*DPR);
     c2.setTransform(DPR,0,0,DPR,0,0);
     build();
   }

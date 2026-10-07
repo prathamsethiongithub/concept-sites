@@ -12,6 +12,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
 <link rel="preload" as="image" type="image/webp" href="assets/mira-hero-880.webp" imagesrcset="assets/mira-hero-440.webp 440w, assets/mira-hero-880.webp 880w" imagesizes="(max-width:760px) 88vw, 440px">
+<link rel="preload" as="font" type="font/woff2" href="https://fonts.gstatic.com/s/fraunces/v38/6NU78FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0KxC9TeA.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="https://fonts.gstatic.com/s/instrumentsans/v4/pxiTypc9vsFDm051Uf6KVwgkfoSxQ0GsQv8ToedPibnr0SZe1Q.woff2" crossorigin>
 <script>
 /* Motion flag: pre-paint hidden states only when motion is welcome and JS is running. */
 (function(){ try { if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){ document.documentElement.classList.add('pre'); } } catch(e){} })();
@@ -136,7 +138,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:420;margin:0;text-wrap:balance}
 .concept-bar{
   position:relative;z-index:46;min-height:34px;display:flex;justify-content:center;align-items:center;gap:9px;
   padding:7px 18px;background:var(--ink);color:#F6ECDF;text-align:center;
-  font-size:.64rem;letter-spacing:.055em;
+  font-size:.66rem;letter-spacing:.055em;
 }
 .concept-bar strong{color:#EFC3C0;font-weight:600}
 .concept-bar i{font-style:normal;color:var(--rose);font-size:.7rem}
@@ -156,7 +158,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:420;margin:0;text-wrap:balance}
 .brand-mark{width:34px;height:39px;flex:none}
 .brand-word{display:grid;line-height:1}
 .brand-name{font-family:var(--serif);font-size:1.42rem;font-weight:500;letter-spacing:-.03em}
-.brand-sub{margin-top:4px;color:var(--ink-soft);font-size:.5rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase}
+.brand-sub{margin-top:4px;color:var(--ink-soft);font-size:.6rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase}
 .site-nav{display:flex;align-items:center;gap:clamp(16px,2.6vw,38px)}
 .site-nav .nl{
   position:relative;color:var(--ink-soft);font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
@@ -166,7 +168,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:420;margin:0;text-wrap:balance}
 .site-nav .nl:hover{color:var(--ink)}
 .site-nav .nl:hover::after,.site-nav .nl[aria-current="page"]::after{transform:scaleX(1);transform-origin:left}
 .site-nav .nl[aria-current="page"]{color:var(--ink)}
-.nav-cta{min-height:42px;padding:10px 15px;font-size:.64rem}
+.nav-cta{min-height:42px;padding:10px 15px;font-size:.66rem}
 .menu-toggle{display:none;width:44px;height:44px;border:1px solid var(--line);border-radius:2px;position:relative;z-index:48}
 .menu-toggle span{position:absolute;left:12px;right:12px;height:1.4px;background:var(--ink);transition:transform .3s var(--ease),opacity .2s}
 .menu-toggle span:nth-child(1){top:16px}
@@ -189,7 +191,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:420;margin:0;text-wrap:balance}
   font-family:var(--serif);font-size:2.1rem;letter-spacing:-.03em;padding:13px 0;border-bottom:1px solid var(--line-soft);
   display:flex;align-items:baseline;justify-content:space-between;
 }
-.nav-drawer a.dl .idx{font-family:var(--sans);font-size:.6rem;letter-spacing:.15em;color:var(--ink-soft);text-transform:uppercase}
+.nav-drawer a.dl .idx{font-family:var(--sans);font-size:.66rem;letter-spacing:.15em;color:var(--ink-soft);text-transform:uppercase}
 .nav-drawer .btn{margin-top:22px;align-self:flex-start}
 .nav-drawer .drawer-note{margin-top:auto;color:var(--ink-soft);font-size:.7rem;letter-spacing:.03em;line-height:1.6}
 
@@ -210,7 +212,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:420;margin:0;text-wrap:balance}
 .hero-h1 .it{font-weight:380}
 .hero-lede{max-width:430px;margin:24px 0 0;color:var(--ink-soft);font-size:.97rem;line-height:1.72}
 .hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:22px;margin-top:32px}
-.hero-smallprint{display:flex;align-items:center;gap:9px;margin-top:26px;color:var(--ink-faint);font-size:.66rem;letter-spacing:.03em}
+.hero-smallprint{display:flex;align-items:center;gap:9px;margin-top:26px;color:var(--ink-faint);font-size:.68rem;letter-spacing:.03em}
 .hero-smallprint::before{content:"✳";color:var(--rose)}
 .hero-stage{position:relative;min-height:560px;display:grid;place-items:center;perspective:1300px}
 .hero-orbit{position:absolute;border-radius:50%;pointer-events:none}
@@ -238,17 +240,17 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:420;margin:0;text-wrap:balance}
   padding:11px 15px;font-size:.68rem;letter-spacing:.04em;color:var(--ink-soft);
   box-shadow:0 18px 44px -24px rgba(43,33,24,.4);
 }
-.float-card em{font-style:normal;color:var(--ink-faint);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase}
+.float-card em{font-style:normal;color:var(--ink-faint);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase}
 .float-card .dot{width:7px;height:7px;border-radius:50%;background:var(--rose);flex:none}
 .fc-hours{left:-34px;bottom:112px;transform:rotate(-3.5deg)}
 .hero-caption{
   position:absolute;left:6px;bottom:-38px;display:flex;align-items:center;gap:10px;
-  color:var(--ink-faint);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-faint);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
 }
 .hero-caption::before{content:"";width:30px;height:1px;background:var(--rose)}
 .scroll-cue{
   position:absolute;z-index:2;right:clamp(18px,4vw,54px);bottom:26px;display:flex;align-items:center;gap:12px;
-  color:var(--ink-faint);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;writing-mode:vertical-rl;
+  color:var(--ink-faint);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;writing-mode:vertical-rl;
 }
 .scroll-cue::after{content:"";width:1px;height:44px;background:linear-gradient(180deg,var(--rose),transparent);animation:cue 2.4s ease-in-out infinite}
 @keyframes cue{0%,100%{transform:scaleY(.4);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}}
